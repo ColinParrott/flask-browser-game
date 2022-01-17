@@ -1,0 +1,374 @@
+<html>
+
+<head>
+    <title>SMA Stats Beta</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootswatch/4.0.0/slate/bootstrap.min.css" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+        crossorigin="anonymous"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/bs4/dt-1.10.16/sl-1.2.5/datatables.min.css" />
+    <script type="text/javascript" src="https://cdn.datatables.net/v/bs4/dt-1.10.16/sl-1.2.5/datatables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/plug-ins/1.10.16/sorting/natural.js"></script>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.1.1/socket.io.js"></script>
+        <link rel="apple-touch-icon" sizes="180x180" href="../static/images/favicons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../static/images/favicons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../static/images/favicons/favicon-16x16.png">
+    <link rel="manifest" href="../static/images/favicons/site.webmanifest">
+    <link rel="mask-icon" href="../static/images/favicons/safari-pinned-tab.svg" color="#5bbad5">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="theme-color" content="#ffffff">
+
+    <style>
+        /* Change row selection colors for both even and odd rows */
+
+        tr.even.selected {
+            background-color: rgb(77, 77, 77) !important;
+            /* Add !important to make sure override datables base styles */
+        }
+
+        tr.odd.selected {
+            background-color: rgb(77, 77, 77) !important;
+            /* Add !important to make sure override datables base styles */
+        }
+
+        .jumbotron.mine {
+            height: 100px;
+        }
+
+        .my-vertical-center {
+            position: relative;
+            top: 50%;
+            transform: translateY(20%);
+        }
+
+        .img-valign {
+            vertical-align: middle;
+            margin-bottom: 0.75em;
+        }
+
+        .text2 {
+            font-size: 24px;
+        }
+    </style>
+</head>
+
+
+<nav class="navbar navbar-expand-lg">
+    <a class="navbar-brand" href="/stats">
+        <img src="{{url_for('static', filename='images/favicon.svg')}}" width="30" height="30" class="d-inline-block align-top" alt=""> SMA Stats
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup"
+        aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+        <div class="navbar-nav">
+            <a class="nav-item nav-link" href="/stats">Celeb Stats</a>
+            <a class="nav-item nav-link" href="/playerstats">Player Stats</a>
+            <a class="nav-item nav-link active" href="/mystats">My Stats</a>
+        </div>
+    </div>
+</nav>
+
+<div class="jumbotron mine">
+
+    <div class="row">
+
+        <div align="center" class="col-2">
+            <img class="img-valign" style="width:20%" id="imgAvatar" src=""></img>
+            <span class="text2" id="textUsername"><b>Username</b></span>
+        </div>
+
+        <div align="center" class="col-8">
+            <h1>👻My Stats👻</h1>
+        </div>
+
+        <div class="col-2"></div>
+
+    </div>
+</div>
+</div>
+
+
+<div id="infoProgressBar" class="progress" style="height: 5%">
+    <div class="progress-bar progress-bar-striped bg-success progress-bar-animated" role="progressbar" aria-valuenow="100" aria-valuemin="0"
+        aria-valuemax="100" style="width: 100%">
+        <small class="justify-content-center d-flex position-absolute w-100" style="font-size: 20px">
+            <i>Fetching from database...</i>
+        </small>
+    </div>
+</div>
+
+
+<body>
+
+
+    <div class="row" id="menuButtonsDiv" style="visibility: hidden">
+        <div id="menuButtons" class="col-sm-offset-5 col-sm-12 text-center">
+            <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                <label class="btn btn-primary active">
+                    <input type="radio" name="overview" id="option1" autocomplete="off" checked=""> Overview
+                </label>
+                <label class="btn btn-primary">
+                    <input type="radio" name="indepth" id="option2" autocomplete="off"> In-depth
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <br></br>
+    </div>
+
+    <div class="container-fluid row d-none" id="overviewStatsDiv">
+
+        <div align="center" class="col-lg-4 col-md-4 col-sm-12 col-xs-12" id="firstDiv">
+            <div class="card text-white border-info bg-dark mb-3" style="max-width: 20rem;">
+                <h3 align="center" id="cardFirstsHeader" class="card-header">Most Firsts</h3>
+                <div class="card-body">
+                    <div class="card-body">
+                        <h4 align="center" id="cardFirstName"></h4>
+                        <img id="cardFirstImage" style="width:100%" src="" class="rounded" alt="Discord Avatar">
+                        <h5 align="center" id="cardFirstNum"></h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div align="center" class="col-lg-4 col-md-4 col-sm-12 col-xs-12" id="secondDiv">
+            <div class="card text-white border-success bg-dark mb-3" style="max-width: 20rem;">
+                <h3 align="center" id="cardSecondsHeader" class="card-header">Most Seconds</h3>
+                <div class="card-body">
+                    <div class="card-body">
+                        <h4 align="center" class="card-title" id="cardSecondName"></h4>
+                        <img id="cardSecondImage" style="width:100%" src="" class="rounded" alt="Discord Avatar">
+                        <h5 align="center" id="cardSecondNum"></h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div align="center" class="col-lg-4 col-md-4 col-sm-12 col-xs-12" id="thirdDiv">
+            <div class="card text-white border-danger bg-dark mb-3" style="max-width: 20rem;">
+                <h3 align="center" id="cardThirdsHeader" class="card-header">Most Thirded</h3>
+                <div class="card-body">
+                    <div class="card-body">
+                        <h4 align="center" id="cardThirdName"></h4>
+                        <img id="cardThirdImage" style="width:100%" src="" class="rounded" alt="Discord Avatar">
+                        <h5 align="center" id="cardThirdNum"></h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+    <div class="container-fluid row d-none" id="tableStatsDiv">
+
+        <div align="center" class="col-2 my-vertical-center">
+            <img id="imgPerson" style="width:100%" src="" class="rounded center-block" alt="Image">
+        </div>
+
+        <div align="center" class="col-10">
+            <table id="statsTable" class="table table-hover">
+                <thead>
+                    <tr class="clickable-row">
+                        <th scope="col">Name</th>
+                        <th scope="col">Appeared for me</th>
+                        <th scope="col">Firsts</th>
+                        <th scope="col">Seconds</th>
+                        <th scope="col">Thirded</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+
+</body>
+
+<script>
+    var socket = io("/stats-space");
+    var peopleMap = new Map();
+    const baseDir = "{{url_for('static', filename='images/female/')}}";
+
+
+    function round(value, decimals) {
+        return Number(Math.round(value + 'e' + decimals) + 'e-' + decimals);
+    }
+
+    function getPercentageString(count, total) {
+        if (total != 0)
+            return String(round((count / total * 100), 0)) + '%';
+        else
+            return "0%";
+    }
+
+    socket.emit('getMyStats');
+
+    $("#menuButtons :input").change(function () {
+
+        const overviewDiv = document.getElementById('overviewStatsDiv');
+        const tableDiv = document.getElementById('tableStatsDiv');
+
+        if (this.name == 'overview') {
+            hideElement(tableDiv);
+            showElement(overviewDiv);
+
+        } else if (this.name == 'indepth') {
+            hideElement(overviewDiv);
+            showElement(tableDiv);
+        } else {
+            alert('Bug in menu buttons code!');
+        }
+    });
+
+    function showElement(a) {
+        a.classList.remove('d-none');
+        a.classList.add('d-flex');
+    }
+
+    function hideElement(a) {
+        a.classList.remove('d-flex');
+        a.classList.add('d-none');
+    }
+
+    socket.on('myInfo', function (username, avatarUrl) {;
+        document.getElementById('textUsername').innerHTML = username;
+        document.getElementById('imgAvatar').src = avatarUrl;
+    });
+
+    socket.on('userStats', function (discord_id, peopleString) {
+        peopleMap = peopleString;
+        const maxFirsts = getMaxStat('firsts');
+        const maxSeconds = getMaxStat('seconds');
+        const maxThirds = getMaxStat('thirds');
+
+        displayMostStats(maxFirsts, maxSeconds, maxThirds);
+        setupTableStats(peopleMap)
+
+        // Convert table to DataTable automagically
+        statsTable = $('#statsTable').DataTable({
+            // Sort second column in descending order by default
+            order: [1, "desc"],
+            columnDefs: [{
+                type: 'natural',
+                targets: [1, 2, 3, 4]
+            }],
+            select: {
+                style: "single"
+            }
+        });
+
+        // Select first row by default
+        statsTable.row(':eq(0)', {
+            page: 'current'
+        }).select();
+
+        var s = statsTable.row(':eq(0)', {
+            page: 'current'
+        });
+
+        s.select();
+
+        const firstRowName = s.data()[0];
+        updateView(firstRowName);
+
+        statsTable.on('user-select', function (e, dt, type, cell, originalEvent) {
+
+            // Stop user from deselecting a row (ensures a row is always selected)
+            if ($(cell.node()).parent().hasClass('selected')) {
+                e.preventDefault();
+            }
+
+            const personName = $(cell.node()).parent()["0"].cells["0"].innerHTML
+            updateView(personName);
+        });
+
+    });
+
+    function updateView(name) {
+        document.getElementById('imgPerson').src = "{{url_for('static', filename='images/female/')}}" + name + ".png";
+    }
+
+    var rowCounter = 0;
+    // Add a person to the table
+    function addPersonToTable(name, appearances, firsts, seconds, thirds) {
+        var table = document.getElementById("statsTable").getElementsByTagName('tbody')[0];
+        var row = table.insertRow(rowCounter);
+        var cellName = row.insertCell(0);
+        var cellApps = row.insertCell(1);
+        var cellFirsts = row.insertCell(2);
+        var cellSeconds = row.insertCell(3);
+        var cellThirds = row.insertCell(4);
+
+        const firstPercent = getPercentageString(firsts, appearances);
+        const secondPercent = getPercentageString(seconds, appearances);
+        const thirdPercent = getPercentageString(thirds, appearances);
+
+        cellName.innerHTML = name
+        cellApps.innerHTML = appearances;
+        cellFirsts.innerHTML = firstPercent + "&emsp;(" + firsts + ")";
+        cellSeconds.innerHTML = secondPercent + "&emsp;(" + seconds + ")";
+        cellThirds.innerHTML = thirdPercent + "&emsp;(" + thirds + ")";
+        rowCounter++;
+    }
+
+    function setupTableStats(peopleMap) {
+        for (const name in peopleMap) {
+            addPersonToTable(name, peopleMap[name].apps, peopleMap[name].firsts, peopleMap[name].seconds, peopleMap[name].thirds);
+        }
+    }
+
+    function displayMostStats(maxFirsts, maxSeconds, maxThirds) {
+        document.getElementById('cardFirstImage').src = baseDir + maxFirsts[0] + ".png";
+        document.getElementById('cardSecondImage').src = baseDir + maxSeconds[0] + ".png";
+        document.getElementById('cardThirdImage').src = baseDir + maxThirds[0] + ".png";
+
+        document.getElementById('cardFirstName').innerHTML = maxFirsts[0];
+        document.getElementById('cardSecondName').innerHTML = maxSeconds[0];
+        document.getElementById('cardThirdName').innerHTML = maxThirds[0];
+
+        document.getElementById('cardFirstNum').innerHTML = "\n" + maxFirsts[1] + " times";
+        document.getElementById('cardSecondNum').innerHTML = "\n" + maxSeconds[1] + " times";
+        document.getElementById('cardThirdNum').innerHTML = "\n" + maxThirds[1] + " times";
+
+
+        hideElement(document.getElementById('infoProgressBar'));
+        const overviewDiv = document.getElementById('overviewStatsDiv');
+        showElement(overviewDiv);
+        document.getElementById('overviewStatsDiv').classList.add('d-flex');
+        document.getElementById('menuButtonsDiv').style.visibility = 'visible';
+        // document.getElementById('firstDiv').style.visibility = 'visible';
+        // document.getElementById('secondDiv').style.visibility = 'visible';
+        // document.getElementById('thirdDiv').style.visibility = 'visible';
+    }
+
+    function getMaxStat(stat) {
+        var maxCount = 0;
+        var maxName = "";
+
+        for (const name in peopleMap) {
+            if (peopleMap[name][stat] >= maxCount) {
+                maxCount = peopleMap[name][stat];
+                maxName = name;
+            }
+        }
+        return [maxName, maxCount];
+    }
+</script>
+
+</html>

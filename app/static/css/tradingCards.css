@@ -1,0 +1,91 @@
+    @font-face {
+        font-family: belwe;
+        src: url('../assets/fonts/Belwe-bd-bt-bold.ttf');
+    }
+
+    .trading-card-name-holder {
+        position: absolute;
+        display: inline-block;
+        top: 550px;
+        left: 120px;
+        width: 550px;
+        height: 75px;
+        z-index: 10;
+    }
+
+    .trading-card-legendary {
+        position: absolute;
+        left: 200px;
+        top: 6px;
+        z-index: 10;
+    }
+
+    .trading-card-image {
+        position: absolute;
+    }
+
+    .trading-card-person {
+        position: absolute;
+        left: 210px;
+        top: 122px;
+        border-radius: 170px;
+        transform: scale(1.15);
+        z-index: -1;
+    }
+
+    .trading-card-flag {
+        position: absolute;
+        width: 150px;
+        height: 100px;
+        top: 943px;
+        left: 325px;
+        z-index: 30;
+        outline: 3px inset #675f53;
+    }
+
+    .trading-card-rating {
+        position: absolute;
+        color: white;
+        font-family: belwe, sans-serif;
+        -webkit-text-stroke: 3px black;
+        font-size: 140px;
+        z-index: 11;
+        left: 35px;
+        top: -25px;
+    }
+
+    .trading-card-name {
+        position: relative;
+        font-family: belwe, sans-serif;
+        white-space: nowrap;
+        color: white;
+        -webkit-text-stroke: 2px black;
+        bottom: 25px;
+        font-size: 55px;
+        display: block;
+        text-align: center;
+        z-index: 6;
+    }
+
+    .trading-card-rarity {
+        position: absolute;
+        top: 601px;
+        left: 330px;
+        z-index: 4;
+    }
+
+    .trading-card-gem {
+        position: absolute;
+        top: 70px;
+        left: 20px;
+        transform: scale(0.8);
+        z-index: 7;
+    }
+
+    .trading-card-title {
+        position: absolute;
+        transform: scale(0.95);
+        top: 545px;
+        left: 65px;
+        z-index: 5;
+    }

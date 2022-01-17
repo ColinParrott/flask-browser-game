@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootswatch/4.0.0/darkly/bootstrap.min.css"
+          crossorigin="anonymous">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/gwent.css') }}">
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"
+            integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.1.1/socket.io.js"></script>
+    <script src="{{ url_for('static', filename='assets/js/textFit.min.js') }}"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/tradingCards.css') }}">
+    <title>SMA</title>
+
+        <link rel="apple-touch-icon" sizes="180x180" href="../static/images/favicons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../static/images/favicons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../static/images/favicons/favicon-16x16.png">
+    <link rel="manifest" href="../static/images/favicons/site.webmanifest">
+    <link rel="mask-icon" href="../static/images/favicons/safari-pinned-tab.svg" color="#5bbad5">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="theme-color" content="#ffffff">
+</head>
+<body>
+
+<div class="container-fluid">
+
+    <div class="row">
+        <div class="col-2">
+            <div class="row" style="margin-top: 5%;">
+                <div style="width: 100%; height: 100%"></div>
+                <div class="col-8">
+                    <h2 class="gwent-font" id="discordName"></h2>
+                </div>
+                <div class="col-4">
+                    <div class="row">
+                        <div class="col-12">
+                                                <span class="gwent-font" style="font-size: 1.5rem; color: white"><img style="width: 40%; transform: rotateZ(20deg); margin-right: 5%"
+                                                         src="../static/images/cards/templates/pack.png"/><span
+                            id="packCount">0</span></span>
+                        </div>
+                    </div>
+                                        <div class="row">
+                        <div class="col-12" style="margin-top: 1vh">
+                                                <span class="gwent-font" style="font-size: 1.5rem; color: gold"><img style="width: 40%; margin-right: 5%"
+                                                         src="../static/images/dust.png"/><span
+                            id="dustCount">0</span></span>
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+
+            <div class="row" style="margin-top: 50%" align="center">
+                <div class="col-12">
+                    <button onclick="window.location.href='..'" class="btn btn-info btn-lg btn-block">Play</button>
+                    <button onclick="window.location.href='../packs'" class="btn btn-info btn-lg btn-block">Open Packs
+                    </button>
+                    <button onclick="window.location.href='../crafting'" class="btn btn-info btn-lg btn-block">Crafting</button>
+                    <br/>
+                    <br/>
+                    <button style="background-color: darkgray; font-family: gwent, sans-serif;" onclick="getDisenchantAllInfo('common')" class="btn btn-warning btn-lg btn-block">Disenchant ALL Commons</button>
+                    <button style="background-color: #0761BA; font-family: gwent, sans-serif;" onclick="getDisenchantAllInfo('rare')" class="btn btn-warning btn-lg btn-block">Disenchant ALL Rares</button>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="col-10">
+
+            <div class="row">
+                <div class="col-12" align="center">
+                    <h1 class="gwent-font">My Collection</h1>
+                    <div id="progressCards">
+                        <h3><i>Loading...</i></h3>
+                        <div class="progress">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated bg-success"
+                                 role="progressbar"
+                                 aria-valuenow="50" aria-valuemin="0" aria-valuemax="100" style="width: 50%;"></div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-3" align="center">
+
+                    <div class="trading-card top-row" id="card1" style="display: none">
+                        <img src="../static/images/cards/templates/dragon.png" class="trading-card-legendary"
+                             style="visibility: hidden"/>
+                        <img src="../static/images/cards/templates/title-weapon.png" class="trading-card-title"/>
+                        <img src="../static/images/female/Momo.png" class="trading-card-person"/>
+                        <img src="../static/images/cards/templates/rarities/epic.png" class="trading-card-rarity"/>
+                        <img src="../static/images/cards/templates/gem.png" class="trading-card-gem"/>
+                        <img src="../static/images/cards/templates/card_bases/rare.png" class="trading-card-image"/>
+                        <div class="trading-card-name-holder"><h1 class="trading-card-name">Momo</h1></div>
+                        <h1 class="trading-card-rating">92</h1>
+                        <img class="trading-card-flag" src="../static/images/countries/svg/kr.svg"/>
+                    </div>
+
+                    <div class="trading-card bottom-row" id="card5" style="display: none">
+                        <img src="../static/images/cards/templates/dragon.png" class="trading-card-legendary"
+                             style="visibility: hidden"/>
+                        <img src="../static/images/cards/templates/title-weapon.png" class="trading-card-title"/>
+                        <img src="../static/images/female/Momo.png" class="trading-card-person"/>
+                        <img src="../static/images/cards/templates/rarities/epic.png" class="trading-card-rarity"/>
+                        <img src="../static/images/cards/templates/gem.png" class="trading-card-gem"/>
+                        <img src="../static/images/cards/templates/card_bases/rare.png" class="trading-card-image"/>
+                        <div class="trading-card-name-holder"><h1 class="trading-card-name">Momo</h1></div>
+                        <h1 class="trading-card-rating">92</h1>
+                        <img class="trading-card-flag" src="../static/images/countries/svg/kr.svg"/>
+                    </div>
+
+                </div>
+                <div class="col-3" align="center">
+
+                    <div class="trading-card top-row" id="card2" style="display: none">
+                        <img src="../static/images/cards/templates/dragon.png" class="trading-card-legendary"
+                             style="visibility: hidden"/>
+                        <img src="../static/images/cards/templates/title-weapon.png" class="trading-card-title"/>
+                        <img src="../static/images/female/Momo.png" class="trading-card-person"/>
+                        <img src="../static/images/cards/templates/rarities/epic.png" class="trading-card-rarity"/>
+                        <img src="../static/images/cards/templates/gem.png" class="trading-card-gem"/>
+                        <img src="../static/images/cards/templates/card_bases/rare.png" class="trading-card-image"/>
+                        <div class="trading-card-name-holder"><h1 class="trading-card-name">Momo</h1></div>
+                        <h1 class="trading-card-rating">92</h1>
+                        <img class="trading-card-flag" src="../static/images/countries/svg/kr.svg"/>
+                    </div>
+
+                    <div class="trading-card bottom-row" id="card6" style="display: none">
+                        <img src="../static/images/cards/templates/dragon.png" class="trading-card-legendary"
+                             style="visibility: hidden"/>
+                        <img src="../static/images/cards/templates/title-weapon.png" class="trading-card-title"/>
+                        <img src="../static/images/female/Momo.png" class="trading-card-person"/>
+                        <img src="../static/images/cards/templates/rarities/epic.png" class="trading-card-rarity"/>
+                        <img src="../static/images/cards/templates/gem.png" class="trading-card-gem"/>
+                        <img src="../static/images/cards/templates/card_bases/rare.png" class="trading-card-image"/>
+                        <div class="trading-card-name-holder"><h1 class="trading-card-name">Momo</h1></div>
+                        <h1 class="trading-card-rating">92</h1>
+                        <img class="trading-card-flag" src="../static/images/countries/svg/kr.svg"/>
+                    </div>
+
+                </div>
+                <div class="col-3" align="center">
+
+                    <div class="trading-card top-row" id="card3" style="display: none">
+                        <img src="../static/images/cards/templates/dragon.png" class="trading-card-legendary"
+                             style="visibility: hidden"/>
+                        <img src="../static/images/cards/templates/title-weapon.png" class="trading-card-title"/>
+                        <img src="../static/images/female/Momo.png" class="trading-card-person"/>
+                        <img src="../static/images/cards/templates/rarities/epic.png" class="trading-card-rarity"/>
+                        <img src="../static/images/cards/templates/gem.png" class="trading-card-gem"/>
+                        <img src="../static/images/cards/templates/card_bases/rare.png" class="trading-card-image"/>
+                        <div class="trading-card-name-holder"><h1 class="trading-card-name">Momo</h1></div>
+                        <h1 class="trading-card-rating">92</h1>
+                        <img class="trading-card-flag" src="../static/images/countries/svg/kr.svg"/>
+                    </div>
+
+                    <div class="trading-card bottom-row" id="card7" style="display: none">
+                        <img src="../static/images/cards/templates/dragon.png" class="trading-card-legendary"
+                             style="visibility: hidden"/>
+                        <img src="../static/images/cards/templates/title-weapon.png" class="trading-card-title"/>
+                        <img src="../static/images/female/Momo.png" class="trading-card-person"/>
+                        <img src="../static/images/cards/templates/rarities/epic.png" class="trading-card-rarity"/>
+                        <img src="../static/images/cards/templates/gem.png" class="trading-card-gem"/>
+                        <img src="../static/images/cards/templates/card_bases/rare.png" class="trading-card-image"/>
+                        <div class="trading-card-name-holder"><h1 class="trading-card-name">Momo</h1></div>
+                        <h1 class="trading-card-rating">92</h1>
+                        <img class="trading-card-flag" src="../static/images/countries/svg/kr.svg"/>
+                    </div>
+
+                </div>
+                <div class="col-3" align="center">
+
+                    <div class="trading-card top-row" id="card4" style="display: none">
+                        <img src="../static/images/cards/templates/dragon.png" class="trading-card-legendary"
+                             style="visibility: hidden"/>
+                        <img src="../static/images/cards/templates/title-weapon.png" class="trading-card-title"/>
+                        <img src="../static/images/female/Momo.png" class="trading-card-person"/>
+                        <img src="../static/images/cards/templates/rarities/epic.png" class="trading-card-rarity"/>
+                        <img src="../static/images/cards/templates/gem.png" class="trading-card-gem"/>
+                        <img src="../static/images/cards/templates/card_bases/rare.png" class="trading-card-image"/>
+                        <div class="trading-card-name-holder"><h1 class="trading-card-name">Momo</h1></div>
+                        <h1 class="trading-card-rating">92</h1>
+                        <img class="trading-card-flag" src="../static/images/countries/svg/kr.svg"/>
+                    </div>
+
+                    <div class="trading-card bottom-row" id="card8" style="display: none">
+                        <img src="../static/images/cards/templates/dragon.png" class="trading-card-legendary"
+                             style="visibility: hidden"/>
+                        <img src="../static/images/cards/templates/title-weapon.png" class="trading-card-title"/>
+                        <img src="../static/images/female/Momo.png" class="trading-card-person"/>
+                        <img src="../static/images/cards/templates/rarities/epic.png" class="trading-card-rarity"/>
+                        <img src="../static/images/cards/templates/gem.png" class="trading-card-gem"/>
+                        <img src="../static/images/cards/templates/card_bases/rare.png" class="trading-card-image"/>
+                        <div class="trading-card-name-holder"><h1 class="trading-card-name">Momo</h1></div>
+                        <h1 class="trading-card-rating">92</h1>
+                        <img class="trading-card-flag" src="../static/images/countries/svg/kr.svg"/>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row" style="margin-top: 18%">
+        <div class="col-4" align="right">
+            <input id="searchBox" onkeyup="searchCollection()" class="form-control mr-sm-2" style="width: 50%; position: absolute; right: -6rem"
+                   type="text" placeholder="Search name">
+        </div>
+        <div class="col-4" align="center">
+            <div style="position: absolute; left: 75%">
+                <button onclick="pagePrev()" class="btn btn-success" style="position: absolute; top: 0; left: -4rem">&lt
+                </button>
+                <h4 id="pageIndicator" style="margin-top: 0.2vh">1/3</h4>
+                <button onclick="pageNext()" class="btn btn-success" style="position: absolute; top: 0; right: -4rem">
+                    &gt
+                </button>
+                <button id="disenchantButton" onclick="disenchantSelected()" class="btn btn-warning btn-lg" style="background-color: white; font-family: gwent, sans-serif; color:#217A70; position: absolute; top: -0.5rem; right: -25rem; display: none">
+                    Disenchant (<span id="selectedDisenchantCount">0</span>)
+                </button>
+            </div>
+
+        </div>
+        <div class="col-4" align="left">
+
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="disenchantAllModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLabel">Are you sure?</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        ...
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+        <button id="buttonDisenchantAllConfirm" type="button" class="btn btn-primary" data-dismiss="modal" onclick="">Disenchant</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+</body>
+
+<script>
+
+    const socket = io('/tradingcard-space');
+    const cardsPerPage = 8;
+    var numCards;
+    var card_array;
+    var currentPage = 1;
+    var maxPages;
+
+    // Disenchanting vars
+    var disenchantIDs = new Set();
+
+    socket.on('connectInfo', function (name, num_packs, dust_count, cards) {
+        console.log('connectInfo');
+        console.log(typeof(cards));
+        cards = JSON.parse(cards);
+        const numPages = Math.ceil(cards.length / cardsPerPage);
+        maxPages = numPages;
+
+        if(currentPage > maxPages)
+        {
+            currentPage = maxPages;
+        }
+
+        card_array = cards;
+        numCards = cards.length;
+        let discordName = $('#discordName');
+        $("#pageIndicator").html(currentPage + "/" + numPages);
+        discordName.html(name);
+        textFit(discordName, {alignHoriz: true, alignVert: false});
+        $("#packCount").html(num_packs);
+        $("#dustCount").html(dust_count);
+        textFit(discordName, {alignHoriz: true, alignVert: false});
+        updatePage(card_array);
+        $('#progressCards').hide();
+    });
+
+    function updatePage(cards) {
+        if (cards.length > 0){
+                    let startIndex = (currentPage - 1) * cardsPerPage;
+        let endIndex = Math.min((startIndex + cardsPerPage - 1), cards.length - 1);
+        let numEmptyCards = cardsPerPage - (endIndex - startIndex) - 1;
+        let numPopulatedCards = cardsPerPage - numEmptyCards;
+
+        console.log('updatePage() \n startIndex: ' + startIndex + "\nendIndex: " + endIndex + "\nEmpty: " + numEmptyCards + "\nPopulated: " + numPopulatedCards);
+
+        for (i = 0; i < numPopulatedCards; i++) {
+            let personImgUrl = "../static/images" + ((cards[startIndex + i].deleted) ? "/deleted/" : "/") + "female/" + encodeURI(cards[startIndex + i].name) + ".png";
+            $('#card' + (i+1)).attr('card-id', cards[startIndex + i]._id);
+            $('#card' + (i + 1) + " .trading-card-person").attr("src", personImgUrl);
+            $('#card' + (i + 1) + " .trading-card-image").attr("src", "../static/images/cards/templates/card_bases/" + cards[startIndex + i].rarity + ".png");
+            $('#card' + (i + 1) + " .trading-card-rarity").attr("src", "../static/images/cards/templates/rarities/" + cards[startIndex + i].rarity + ".png");
+            $('#card' + (i + 1) + " .trading-card-name").html(cards[startIndex + i].name);
+            $('#card' + (i + 1) + " .trading-card-rating").html(cards[startIndex + i].rating);
+            $('#card' + (i + 1) + " .trading-card-flag").attr("src", "../static/images/countries/svg/" + cards[startIndex + i].country + ".svg");
+
+            let legendaryImage = $('#card' + (i + 1) + " .trading-card-legendary");
+
+            if (cards[startIndex + i].rarity === 'legendary')
+                legendaryImage.attr('style', 'visibility: visible');
+            else
+                legendaryImage.attr('style', 'visibility: hidden');
+            $('#card' + (i + 1)).show();
+
+            if(cards[startIndex + i].deleted) {
+                $('#card' + (i + 1) + " .trading-card-person").css('filter', 'grayscale(100%)');
+            }
+            else
+            {
+                $('#card' + (i + 1) + " .trading-card-person").css('filter', 'grayscale(0%)');
+            }
+        }
+
+
+        textFit($('.trading-card-name'), {alignHoriz: true, alignVert: false});
+
+
+        for (i = numPopulatedCards + 1; i <= cardsPerPage; i++) {
+            $('#card' + i).hide();
+        }
+
+        }
+    }
+
+    function updatePageIndicator() {
+        $('#disenchantButton').hide();
+        resetDisenchantSelections();
+        $("#pageIndicator").html(((maxPages > 0) ? currentPage : 0) + "/" + maxPages);
+    }
+
+    function searchCollection() {
+        currentPage = 1;
+        let searchText = $("#searchBox").val().toLowerCase();
+        if (searchText.text !== '') {
+
+            for (i = 1; i <= cardsPerPage; i++) {
+                $('#card' + i).hide();
+            }
+
+            let filteredCards = card_array.filter(x => x.name.toLowerCase().includes(searchText));
+
+
+            maxPages = Math.ceil(filteredCards.length / cardsPerPage);
+            updatePageIndicator();
+
+            console.log(filteredCards);
+            updatePage(filteredCards);
+        }
+        else {
+            maxPages = Math.ceil(numCards / cardsPerPage);
+            updatePageIndicator();
+            updatePage(card_array);
+        }
+    }
+
+    function pageNext() {
+        if (currentPage < maxPages) {
+            currentPage++;
+            updatePageIndicator();
+            let audio = new Audio('{{ url_for('static', filename='sound/right.mp3')}}');
+            audio.volume = 0.1;
+            audio.play();
+            updatePage(card_array);
+
+        }
+    }
+
+    function pagePrev() {
+        if (currentPage > 1) {
+            currentPage--;
+            updatePageIndicator();
+            let audio = new Audio('{{ url_for('static', filename='sound/left.mp3')}}');
+            audio.volume = 0.1;
+            audio.play();
+            updatePage(card_array);
+
+        }
+    }
+
+    function getDisenchantAllInfo(rarity)
+    {
+        console.log('discard ' + rarity + 's');
+        socket.emit('getDisenchantAllInfo', rarity);
+
+    }
+
+    function disenchantAll(rarity)
+    {
+        socket.emit('disenchantAll', rarity);
+        let audio = new Audio('../static/sound/disenchant.mp3');
+        audio.volume = 1;
+        audio.play();
+    }
+
+    socket.on('updateDustCount', function(count)
+    {
+        console.log('updateDustCount: ' + count);
+    });
+
+    $('.trading-card').click(function(e)
+    {
+        let chosenCard = $('#' + e.currentTarget.id);
+        let cardId = e.currentTarget.attributes['card-id'].value;
+
+        console.log(chosenCard.css('filter'));
+        if (chosenCard.css('filter') === 'grayscale(1)')
+        {
+            chosenCard.css('filter', '');
+            disenchantIDs.delete(cardId);
+        }
+        else
+        {
+            chosenCard.css('filter', 'grayscale(1)');
+            disenchantIDs.add(cardId);
+        }
+
+        if(disenchantIDs.size > 0)
+        {
+            $('#selectedDisenchantCount').html(disenchantIDs.size);
+            $('#disenchantButton').show();
+        }
+        else
+        {
+            $('#disenchantButton').hide();
+        }
+
+        console.log(disenchantIDs);
+    });
+
+    function resetDisenchantSelections()
+    {
+        $('#disenchantButton').hide();
+        disenchantIDs.clear();
+        for(let i = 1; i <=8; i++)
+        {
+            $('#card' + i).css('filter', '');
+        }
+    }
+
+    function disenchantSelected()
+    {
+        $('#searchBox').val('');
+        socket.emit('disenchantSelected', Array.from(disenchantIDs));
+        let audio = new Audio('../static/sound/disenchant.mp3');
+        audio.volume = 1;
+        audio.play();
+        resetDisenchantSelections();
+    }
+
+    socket.on('disenchantAllInfo', function (num, totalDust, rarity) {
+        console.log('received msg');
+        $('#buttonDisenchantAllConfirm').attr('onclick', "disenchantAll('" + rarity + "')");
+        $('#disenchantAllModal .modal-body').html("You will disenchant <b>" + num + "</b> " +  rarity + " cards for <b>" + totalDust + "</b> dust");
+        $('#disenchantAllModal').modal('show');
+    });
+
+</script>
+
+<style>
+
+
+    .bottom-row {
+        right: 35%;
+        top: 40vh;
+    }
+
+    .top-row {
+        right: 35%;
+    }
+
+    .trading-card {
+        position: relative;
+        display: inline-block;
+        transform: scale(0.35);
+    }
+
+
+    .trading-card:hover {
+        transform: scale(0.37) translateX(-2vh) translateY(-2vh);
+    }
+
+    .trading-card-name {
+        top: 8px;
+    }
+
+    .trading-card-rating {
+        top: 60px;
+    }
+
+    body
+    {
+        background: url("{{ url_for('static', filename='images/bg.jpg')}}");
+    }
+
+    * {
+
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        cursor: url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/836/hearthstone-cursor.png) 10 2, auto;
+    }
+
+    *:active {
+        cursor: url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/836/hearthstone-click.png) 10 2, auto;
+    }
+
+    .gwent-font {
+        color: #217A70;
+        font-family: gwent, sans-serif;
+        -webkit-text-stroke: 1px black;
+    }
+
+</style>
+
+</html>

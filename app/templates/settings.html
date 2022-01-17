@@ -1,0 +1,250 @@
+<html>
+
+<head>
+    <title>My Settings</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootswatch/4.0.0/darkly/bootstrap.min.css" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.1.1/socket.io.js"></script>
+
+        <link rel="apple-touch-icon" sizes="180x180" href="../static/images/favicons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../static/images/favicons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../static/images/favicons/favicon-16x16.png">
+    <link rel="manifest" href="../static/images/favicons/site.webmanifest">
+    <link rel="mask-icon" href="../static/images/favicons/safari-pinned-tab.svg" color="#5bbad5">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="theme-color" content="#ffffff">
+</head>
+
+<body>
+    <h1 align="center">My Settings</h1>
+
+    <div id="player"></div>
+
+    <div class="jumbotron">
+        <h1 align="center" style="color: #30BD8D">JAYDEN DREAM ROUND SOUND</h1>
+        <div class="row">
+            <div class="col-lg-2">
+            </div>
+
+            <div class="col-lg-4">
+
+                <div class="row">
+
+                    <div class="col-lg-6">
+                        <div align="center">
+                            <label class="col-form-label" for="inputDefault">YouTube Video ID</label>
+                            <input type="text" class="form-control" placeholder="Enter a YouTube video ID" id="inputSecondVideoId" maxlength="11" style="text-align: center">
+                            <div class="invalid-feedback">Invalid Video ID</div>
+
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6">
+                        <div align="center">
+                            <label class="col-form-label" for="inputDefault">Start time</label>
+                            <input type="number" min="0" max="999" maxlength="3" class="form-control" placeholder="Enter video start time in seconds" id="inputSecondStartTime"
+                                style="text-align: center" oninput="validity.valid||(value=value.substring(0, 3));">
+                        </div>
+                    </div>
+                </div>
+                <br/>
+                <button type="button" onclick="saveVideo('second')" class="btn btn-lg btn-success btn-block">Save</button>
+            </div>
+
+
+
+            <div class="col-lg-4">
+                <div class="row">
+
+
+                    <div class="col-lg-6">
+                        <div align="center">
+                            <label class="col-form-label" for="inputDefault">Saved sound</label>
+                            <input class="form-control" id="savedSecondVideoId" type="text" placeholder="default" disabled="" style="text-align: center">
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6">
+                        <div align="center">
+                            <label class="col-form-label" for="inputDefault">Saved start time</label>
+                            <input class="form-control" id="savedSecondStartTime" type="text" placeholder="0" disabled="" style="text-align: center">
+                        </div>
+                    </div>
+                </div>
+                </br>
+                <button type="button" onclick="previewSound('second')" class="btn btn-primary btn-lg btn-block">Preview</button>
+            </div>
+
+            <div class="col-lg-2">
+
+            </div>
+        </div>
+    </div>
+
+    <p align="center" >A YouTube video ID is the 11 characters after the v= segment: https://www.youtube.com/watch?v=<a class="text-info">GDpmVUEjagg</a></p>
+    <p align="center" >Your clips will play for a maximium of <strong>10 seconds</strong> from your chosen start times.</p>
+
+    <div class="jumbotron">
+            <h1 align="center" style="color: #DD4433">JAYDEN HELL ROUND SOUND</h1>
+        <div class="row">
+            <div class="col-lg-2">
+            </div>
+
+            <div class="col-lg-4">
+
+                <div class="row">
+
+                    <div class="col-lg-6">
+                        <div align="center">
+                            <label class="col-form-label" for="inputDefault">YouTube Video ID</label>
+                            <input type="text" class="form-control" placeholder="Enter a YouTube video ID" id="inputThirdVideoId" maxlength="11" style="text-align: center">
+                            <div class="invalid-feedback">Invalid Video ID</div>
+
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6">
+                        <div align="center">
+                            <label class="col-form-label" for="inputDefault">Start time</label>
+                            <input type="number" min="0" max="999" class="form-control" placeholder="Enter video start time in seconds" id="inputThirdStartTime" maxlength="3"
+                                style="text-align: center" oninput="validity.valid||(value=value.substring(0, 3));">
+                        </div>
+                    </div>
+                </div>
+                <br/>
+                <button type="button" onclick="saveVideo('third')" class="btn btn-lg btn-success btn-block">Save</button>
+            </div>
+
+
+
+            <div class="col-lg-4">
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div align="center">
+                            <label class="col-form-label" for="inputDefault">Saved sound</label>
+                            <input class="form-control" id="savedThirdVideoId" type="text" placeholder="default" disabled="" style="text-align: center">
+                            <div class="valid-feedback"></div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6">
+                        <div align="center">
+                            <label class="col-form-label" for="inputDefault">Saved start time</label>
+                            <input class="form-control" id="savedThirdStartTime" type="text" placeholder="0" disabled="" style="text-align: center">
+                            <div class="valid-feedback"></div>
+                        </div>
+                    </div>
+                </div>
+                </br>
+                <button type="button" onclick="previewSound('third')" class="btn btn-primary btn-lg btn-block">Preview</button>
+            </div>
+
+            <div class="col-lg-2">
+
+            </div>
+        </div>
+    </div>
+
+    <script src="{{url_for('static', filename='js/youtube_audio.js')}}"></script>
+    <script>
+        var socket = io("/settings-space");
+        var myAudio;
+
+        socket.emit('getJaydenSong', 'second');
+        socket.emit('getJaydenSong', 'third');
+
+        var updatesReceived = 0;
+
+        function saveVideo(stat) {
+            document.getElementById('input' + capitalizeFirstLetter(stat) + "VideoId").classList.remove("is-invalid");
+            if (stat == 'second') {
+                id = $('#inputSecondVideoId').val();
+                time = $('#inputSecondStartTime').val();
+                socket.emit('setJaydenSong', id, time, 'second');
+            } else {
+                id = $('#inputThirdVideoId').val();
+                time = $('#inputThirdStartTime').val();
+                socket.emit('setJaydenSong', id, time, 'third');
+            }
+        }
+
+        function playSound(name, volume) {
+            if(myAudio != null)
+            {
+                myAudio.pause();
+            }
+            myAudio = new Audio('static/sound/' + name);
+            myAudio.volume = volume;
+            myAudio.play();
+        }
+
+        function previewSound(stat) {
+            id = document.getElementById('saved' + capitalizeFirstLetter(stat) + 'VideoId').getAttribute('placeholder');
+            time = document.getElementById('saved' + capitalizeFirstLetter(stat) + 'StartTime').getAttribute(
+                'placeholder');
+
+            if (id != "default") {
+                playYouTubeAudio(id, time);
+            } else {
+                playSound("jayden-" + stat + ".mp3", 0.05);
+            }
+
+        }
+
+        socket.on('invalidVideoId', function (stat)
+        {
+            console.log('invalidVideoId()');
+            videoElement = 'input' + capitalizeFirstLetter(stat) + "VideoId"
+            document.getElementById(videoElement).classList.add("is-invalid")
+        });
+
+        socket.on('jaydenSong', function (stat, songObj, isNew) {
+            console.log('jaydenSong');
+            console.log(songObj);
+            numKeys = Object.keys(songObj).length;
+
+            video_id = (numKeys > 0) ? songObj["jayden_" + stat]['video_id'] : "default";
+            start_time = (numKeys > 0) ? songObj["jayden_" + stat]['start_time'] : "N/A";
+
+            videoElement = 'saved' + capitalizeFirstLetter(stat) + 'VideoId';
+            timeElement = 'saved' + capitalizeFirstLetter(stat) + 'StartTime';
+
+
+            document.getElementById(videoElement).setAttribute(
+                'placeholder',
+                video_id);
+
+            document.getElementById(timeElement).setAttribute(
+                'placeholder',
+                start_time
+            );
+
+            if (updatesReceived > 1) {
+                document.getElementById(videoElement).classList.add("is-valid");
+                document.getElementById(timeElement).classList.add("is-valid");
+            }
+
+            if(isNew)
+            {
+                ele = 'input' + capitalizeFirstLetter(stat) + "VideoId";
+                document.getElementById(ele).classList.remove("is-valid");
+            }
+
+
+            updatesReceived++;
+
+        });
+
+        function capitalizeFirstLetter(string) {
+            return string.charAt(0).toUpperCase() + string.slice(1);
+        }
+    </script>
+
+
+</body>
+
+</html>

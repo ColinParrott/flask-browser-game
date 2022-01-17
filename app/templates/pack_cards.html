@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script src="../static/assets/js/textFit.min.js"></script>
+    <link rel="stylesheet" href="../static/css/tradingCards.css">
+        <link rel="apple-touch-icon" sizes="180x180" href="../static/images/favicons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../static/images/favicons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../static/images/favicons/favicon-16x16.png">
+    <link rel="manifest" href="../static/images/favicons/site.webmanifest">
+    <link rel="mask-icon" href="../static/images/favicons/safari-pinned-tab.svg" color="#5bbad5">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="theme-color" content="#ffffff">
+</head>
+
+<body>
+
+
+<div class="trading-card" onclick="flipCard(this)">
+    <div class="face front">
+        <img src="../static/images/cards/templates/dragon.png" class="trading-card-legendary"/>
+        <img src="../static/images/cards/templates/title-weapon.png" class="trading-card-title"/>
+        <img src="../static/images/female/Momo.png" class="trading-card-person"/>
+        <img src="../static/images/cards/templates/rarities/legendary.png"
+             class="trading-card-rarity"/>
+        <img src="../static/images/cards/templates/gem.png" class="trading-card-gem"/>
+        <img class="front img" src="../static/images/cards/templates/card_bases/legendary.png"
+             class="trading-card-image"/>
+
+        <div class="trading-card-name-holder">
+            <h1 onchange="meme()" class="trading-card-name">Momo</h1>
+        </div>
+        <h1 class="trading-card-rating">96</h1>
+        <img class="trading-card-flag" src="../static/images/countries/svg/kr.svg"/>
+    </div>
+    <div class="face back">
+        <img class="back img" src="../static/images/cardback.png">
+    </div>
+</div>
+<script>
+    $(document).ready(function () {
+        textFit($('.trading-card-name'), {alignHoriz: true, alignVert: false})
+
+
+    });
+
+    function flipCard(ele) {
+        ele.classList.toggle('flip');
+    }
+</script>
+
+<style>
+    body {
+        background-color: dimgrey;
+    }
+
+    .face {
+        position: absolute;
+        backface-visibility: hidden;
+    }
+
+    .face.front {
+        display: inline-block;
+        transform: rotateY(180deg) scale(1);
+        box-sizing: border-box;
+        image-rendering: pixelated;
+    }
+
+    .back.img {
+        position: absolute;
+        backface-visibility: hidden;
+        left: -100px;
+        transition-duration: 0.1s;
+    }
+
+    .back.img:hover {
+        transform: scale(1.015);
+        transition-duration: 0.1s;
+    }
+
+
+    .trading-card.flip {
+        transform: rotateY(180deg) scale(0.42);
+    }
+
+    .trading-card {
+        position: absolute;
+        perspective: 1000px;
+        transform-style: preserve-3d;
+        backface-visibility: hidden;
+        transition-duration: 1s;
+        transform-origin: 300px 0;
+        transform: scale(0.4) rotateY(0deg);
+        {#image-rendering: -moz-crisp-edges;#}
+        box-sizing: border-box;
+    }
+
+
+</style>
+</body>
+</html>

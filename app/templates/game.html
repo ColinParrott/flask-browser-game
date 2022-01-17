@@ -1,0 +1,1377 @@
+<html>
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootswatch/4.0.0/darkly/bootstrap.min.css"
+          crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"
+            integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+            crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.1.1/socket.io.js"></script>
+    <title>SMA</title>
+
+    <script src="{{ url_for('static', filename='js/youtube_audio.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/text_resolver.js') }}"></script>
+        <link rel="apple-touch-icon" sizes="180x180" href="../static/images/favicons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../static/images/favicons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../static/images/favicons/favicon-16x16.png">
+    <link rel="manifest" href="../static/images/favicons/site.webmanifest">
+    <link rel="mask-icon" href="../static/images/favicons/safari-pinned-tab.svg" color="#5bbad5">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="theme-color" content="#ffffff">
+    <script>
+
+
+        var keyPicNum = 1;
+        var keyFirstEnterTime = 0;
+        var keyFirstEnterPressed = false;
+        var keyModeEnabled = false;
+        var blurred = false;
+        var receivedRoundPics = false;
+
+        $(document).ready(function () {
+
+            let alertSwitch = $('#switch');
+
+            alertSwitch.click(function (e) {
+                e.preventDefault(); // The flicker is a codepen thing
+                $(this).toggleClass('toggle-on');
+                const on = $(this).hasClass('toggle-on');
+
+                localStorage.setItem('roundAlertOn', on);
+            });
+
+            localStorage.getItem('roundAlertOn') === 'true' ? alertSwitch.addClass('toggle-on') : alertSwitch.removeClass('toggle-on');
+
+            window.onblur = function () {
+                blurred = true
+            };
+            window.onfocus = function () {
+                blurred = false
+            };
+
+            $(".card").click(function (e) {
+                let cardImage = e.currentTarget.querySelector('[id^=image]');
+                let link = cardImage.getAttribute('href');
+                window.open(link);
+            });
+
+
+            if (!receivedRoundPics) {
+                changeImage(1, "Chelsea Kane");
+                changeImage(2, "Shay Mitchell");
+                changeImage(3, "Vanessa Marano");
+            }
+
+        });
+
+        $(document).on("keyup", function (e) {
+
+            if (e.which === 80) // P
+            {   console.log(location.protocol);
+                console.log('P');
+                console.log(location.protocol + '//' + window.location.host + '/spotify/toggle');
+                var xhr = new XMLHttpRequest();
+                xhr.open('PUT', location.protocol + '//' + window.location.host + '/spotify/toggle', true);
+                xhr.send();
+            }
+
+            // console.log(e.which);
+            if (e.which === 32) // SPACE
+            {
+                keyModeEnabled = !keyModeEnabled;
+
+                console.log('keyMode: ' + keyModeEnabled);
+                if (!keyModeEnabled) {
+                    resetKeyboardStuff();
+                }
+                else {
+                    if ($('#submitButton').is(':visible') && document.activeElement.id !== 'inputUsername')
+                        updateHighlightedPic();
+                }
+            }
+            else if (e.which === 13) // Enter
+            {
+                if (!keyFirstEnterPressed) {
+                    keyFirstEnterTime = new Date().getTime();
+                    keyFirstEnterPressed = true;
+                    setTimeout(250, function () {
+                        keyFirstEnterPressed = false;
+                    })
+                }
+                else if ((new Date().getTime() - keyFirstEnterTime) <= 300) {
+                    $('#submitButton').click();
+                    keyFirstEnterPressed = false;
+                }
+                else {
+                    keyFirstEnterPressed = false;
+                }
+
+            }
+            else if (e.which === 27) // ESC
+            {
+                if ($('.modal').is(':visible')) {
+                    hideModal();
+                }
+            }
+
+            if ($('#submitButton').is(':visible') && document.activeElement.id !== 'inputUsername' && keyModeEnabled) {
+                if (e.which === 83) // S
+                {
+                    select_button('first')
+                }
+                else if (e.which === 77) // M
+                {
+                    select_button('second')
+                }
+                else if (e.which === 65) // A
+                {
+                    select_button('third')
+                }
+                else if (e.which === 37) // LEFT
+                {
+                    if (keyPicNum === 2 || keyPicNum === 3) {
+                        keyPicNum--;
+                        updateHighlightedPic();
+                    }
+                }
+                else if (e.which === 39) // RIGHT
+                {
+                    if (keyPicNum === 1 || keyPicNum === 2) {
+                        keyPicNum++;
+                        updateHighlightedPic();
+                    }
+                }
+            }
+        });
+
+        function toggle_spotify(resume) {
+            console.log(location.protocol);
+            console.log('toggle_spotify: ' + resume);
+            var xhr = new XMLHttpRequest();
+            var url = location.protocol + '//' + window.location.host + '/spotify/resume';
+            if (!resume)
+                url = location.protocol + '//' + window.location.host + '/spotify/pause';
+            xhr.open('PUT', url, true);
+            xhr.send();
+        }
+
+        function select_button(choice) {
+            // console.log('keyPicNum: ' + keyPicNum);
+            const uncheckChoices = remove(['first', 'second', 'third'], choice);
+            // console.log(uncheckChoices);
+
+            for (let i = 0; i < uncheckChoices.length; i++) {
+                document.getElementById(uncheckChoices[i] + '-' + keyPicNum).checked = false;
+            }
+
+            document.getElementById(choice + '-' + keyPicNum).checked = true;
+
+            if (keyPicNum < 3)
+                keyPicNum++;
+            else
+                keyPicNum = 1;
+
+
+            updateHighlightedPic();
+        }
+
+        function updateHighlightedPic() {
+            const unHighlightPics = remove([1, 2, 3], keyPicNum);
+            // console.log(unHighlightPics);
+            for (let i = 0; i < unHighlightPics.length; i++) {
+                document.getElementById('card' + unHighlightPics[i]).removeAttribute("style");
+            }
+
+            document.getElementById('card' + keyPicNum).setAttribute("style", "border: 4px solid yellow;border-radius: 10px")
+        }
+
+        function remove(array, element) {
+            const index = array.indexOf(element);
+
+            if (index !== -1) {
+                array.splice(index, 1);
+            }
+
+            return array;
+        }
+
+        function resetKeyboardStuff() {
+            for (let i = 1; i <= 3; i++) {
+                document.getElementById('card' + i).removeAttribute("style");
+            }
+            keyPicNum = 1;
+        }
+
+        var socket = io('/game-space');
+        var pageOpen = true;
+        var timerAudio;
+        socket.emit('gameStartRequested');
+
+        window.onblur = function () {
+            pageOpen = false;
+        }
+        window.onfocus = function () {
+            pageOpen = true;
+        }
+
+
+        function changeUsername() {
+            socket.emit('updateUsername', $('#inputUsername').val());
+        }
+
+        function startGame() {
+            socket.emit('gameStartRequested');
+        }
+
+        function changeImage(imageNum, personName) {
+            imageSelector = '#image' + imageNum;
+            imgUrl = 'url("{{ url_for('static', filename='images/female/')}}' + encodeURI(personName) + '.png")';
+            card = $('#image' + imageNum);
+            card.css("background-image", imgUrl);
+            card.attr("href", "https://www.google.com/search?q=" + personName);
+        }
+
+        function usernameUpdated(names, roundStarted) {
+            //Empty username list
+            $('#list').empty();
+
+            // console.log(names);
+
+            // Repopulate list with new names
+            for (const name in names) {
+                /**
+                 *  <li class="list-group-item list-group-item-success justify-content-between align-items-center">
+                 Clarkdragon#2312
+                 </li>
+                 */
+
+                var nickname = names[name].nickname;
+                var result = "";
+
+                if (!names[name].chosen) {
+                    result +=
+                        "<li class=\x22list-group-item justify-content-between align-items-center\x22>"
+                } else {
+                    result +=
+                        "<li class=\x22list-group-item list-group-item-success justify-content-between align-items-center\x22>"
+                }
+
+                result += nickname + "</li>";
+
+                $('#list').append(result);
+            }
+        }
+
+        function getRadioBoxValue(id) {
+            return document.getElementById(id).checked;
+        }
+
+        function updateStatusText(string) {
+            // console.log('updateStatusText: ' + string);
+            document.getElementById("status").innerHTML = string;
+
+            if ($('#submitButton').is(':visible') && string == 10) {
+                timerAudio = new Audio('static/sound/timer.mp3');
+                timerAudio.volume = 0.1;
+                timerAudio.play();
+            }
+        }
+
+
+        function submitAnswer() {
+            console.log('Submit button hit!');
+            socket.emit('checkRoundStarted');
+        }
+
+        function showStats() {
+            var target = window.location.origin + '/stats';
+            var win = window.open(target, '_blank');
+            if (win) {
+                //Browser has allowed it to be opened
+                win.focus();
+            } else {
+                //Browser has blocked it
+                alert('Please allow popups');
+            }
+        }
+
+        function showLinkSpotify() {
+            var target = window.location.origin + '/linkspotify';
+            var win = window.open(target, '_blank');
+            if (win) {
+                //Browser has allowed it to be opened
+                win.focus();
+            } else {
+                //Browser has blocked it
+                alert('Please allow popups');
+            }
+        }
+
+        function showPatchNotes() {
+            var target = window.location.origin + '/patchnotes';
+            var win = window.open(target, '_blank');
+            if (win) {
+                //Browser has allowed it to be opened
+                win.focus();
+            } else {
+                //Browser has blocked it
+                alert('Please allow popups');
+            }
+        }
+
+        function showCelebInfo() {
+            var target = window.location.origin + '/celebinfo';
+            var win = window.open(target, '_blank');
+            if (win) {
+                //Browser has allowed it to be opened
+                win.focus();
+            } else {
+                //Browser has blocked it
+                alert('Please allow popups');
+            }
+        }
+
+        function showTradingHome() {
+            var target = window.location.origin + '/tradingcards';
+            var win = window.open(target, '_blank');
+            if (win) {
+                //Browser has allowed it to be opened
+                win.focus();
+            } else {
+                //Browser has blocked it
+                alert('Please allow popups');
+            }
+        }
+
+        function showMySettings() {
+            var target = window.location.origin + '/settings';
+            var win = window.open(target, '_blank');
+            if (win) {
+                //Browser has allowed it to be opened
+                win.focus();
+            } else {
+                //Browser has blocked it
+                alert('Please allow popups');
+            }
+        }
+
+        function getColorString(choice) {
+            if (choice == 'first') {
+                return "#006bf7";
+            } else if (choice == 'second') {
+                return "#1daf72";
+            } else {
+                return "#B54A4A";
+            }
+        }
+
+        function showChoices(string, names) {
+
+            // console.log('show Choice');
+            // console.log(names);
+            clearChoices();
+            strColor = getColorString(string);
+
+            for (var name in names) {
+                if (names[name].chosen) {
+                    if (names[name].choice1 == string) {
+                        $('#image1List').append("<li style=\"color:" + strColor + "\">" + names[name].nickname + "</li>");
+                    } else if (names[name].choice2 == string) {
+                        $('#image2List').append("<li style=\"color:" + strColor + "\">" + names[name].nickname + "</li>");
+                    } else if (names[name].choice3 == string) {
+                        $('#image3List').append("<li style=\"color:" + strColor + "\">" + names[name].nickname + "</li>");
+                    }
+                }
+            }
+
+        }
+
+        function clearChoices() {
+            $('#image1List').empty();
+            $('#image2List').empty();
+            $('#image3List').empty();
+        }
+
+        function continueSubmitting() {
+
+            var allowed = true;
+
+            var first1 = getRadioBoxValue('first-1');
+            var second1 = getRadioBoxValue('second-1');
+            var third1 = getRadioBoxValue('third-1');
+
+            var first2 = getRadioBoxValue('first-2');
+            var second2 = getRadioBoxValue('second-2');
+            var third2 = getRadioBoxValue('third-2');
+
+            var first3 = getRadioBoxValue('first-3');
+            var second3 = getRadioBoxValue('second-3');
+            var third3 = getRadioBoxValue('third-3');
+
+            var group1 = first1 || second1 || third1;
+            var group2 = first2 || second2 || third2;
+            var group3 = first3 || second3 || third3;
+
+            if (!group1) {
+                modalAlert("Please choose an option for the first image");
+                allowed = false;
+            } else if (!group2) {
+                modalAlert("Please choose an option for the second image");
+                allowed = false;
+            } else if (!group3) {
+                modalAlert("Please choose an option for the third image");
+                allowed = false;
+            }
+
+            if (allowed) {
+                if (first1 && first2 || first2 && first3 || first1 && first3) {
+                    modalAlert('You can only first one person');
+                    allowed = false;
+                } else if (second1 && second2 || second2 && second3 || second1 && second3) {
+                    modalAlert('You can only second one person');
+                    allowed = false;
+                } else if (third1 && third2 || third2 && third3 || third1 && third3) {
+                    modalAlert('You can only third one person');
+                    allowed = false;
+                } else {
+                    //alert('Valid choices');
+                    allowed = true;
+                }
+            }
+
+            if (allowed) {
+                var choice1, choice2, choice3;
+
+                if (first1) {
+                    choice1 = "first";
+                } else if (second1) {
+                    choice1 = "second";
+                } else if (third1) {
+                    choice1 = "third";
+                }
+
+                if (first2) {
+                    choice2 = "first";
+                } else if (second2) {
+                    choice2 = "second";
+                } else if (third2) {
+                    choice2 = "third";
+                }
+
+                if (first3) {
+                    choice3 = "first";
+                } else if (second3) {
+                    choice3 = "second";
+                } else if (third3) {
+                    choice3 = "third";
+                }
+
+                socket.emit('finalAnswers', choice1, choice2, choice3);
+                resetKeyboardStuff();
+                if (timerAudio != null) {
+                    timerAudio.pause();
+                    timerAudio.currentTime = 0;
+                }
+                $('#submitButton').hide();
+            }
+        }
+
+        socket.on('jaydenRound', function (stat, username) {
+            const titleText = document.getElementById('titleText');
+
+
+        });
+
+        socket.on('updateRound', function (round, path, users) {
+
+            if ((document.hidden || blurred) && $('#switch').hasClass('toggle-on') && !round.isJayden) {
+                let myAudio = new Audio('static/sound/ready.mp3');
+                myAudio.volume = 1.0
+                toggle_spotify(false);
+                myAudio.play();
+                myAudio.onended = function () {
+                    toggle_spotify(true)
+                };
+            }
+
+
+            // console.log('updateRound()')
+            // console.log(round);
+
+
+            if (!round.isJayden) {
+                const titleText = document.getElementById('titleText');
+                titleText.innerText = "WTB";
+                titleText.removeAttribute('style');
+            } else {
+                // pause Spotify
+                toggle_spotify(false);
+
+                // console.log(round.jaydenStat + " for: " + round.jaydenUsername);
+                if (round.jaydenStat == 'third') {
+                    if (round.jaydenVideoId != null || round.jaydenVideoStartTime != null) {
+                        playYouTubeAudio(round.jaydenVideoId, round.jaydenVideoStartTime)
+                    } else {
+                        playSound('jayden-third.mp3', 0.1, true);
+                    }
+
+                    titleText.innerText = appendApostrophe(round.jaydenUsername) + ' Hell';
+                    titleText.setAttribute('style', 'color:red')
+                } else if (round.jaydenStat == 'second') {
+                    if (round.jaydenVideoId != null || round.jaydenVideoStartTime != null) {
+                        playYouTubeAudio(round.jaydenVideoId, round.jaydenVideoStartTime)
+                    } else {
+                        playSound('jayden-second.mp3', 0.1, true);
+                    }
+                    titleText.innerText = appendApostrophe(round.jaydenUsername) + ' Dream';
+                    titleText.setAttribute('style', 'color:green')
+                }
+            }
+
+            receivedRoundPics = true;
+            if (!round.isJayden) {
+
+                resolver.resolve(document.getElementById('imgname1'), round.name1, null);
+                resolver.resolve(document.getElementById('imgname2'), round.name2, null);
+                resolver.resolve(document.getElementById('imgname3'), round.name3, null);
+                changeImage(1, round.name1);
+                changeImage(2, round.name2);
+                changeImage(3, round.name3);
+                $('#submitButton').show();
+            }
+            else {
+                $('#card1').toggleClass('flip');
+                $('#card2').toggleClass('flip');
+                $('#card3').toggleClass('flip');
+                changeImage(1, round.name1);
+                changeImage(2, round.name2);
+                changeImage(3, round.name3);
+                document.getElementById('imgname1').innerHTML = '?';
+                document.getElementById('imgname2').innerHTML = '?';
+                document.getElementById('imgname3').innerHTML = '?';
+
+                setTimeout(function () {
+                    revealCard(1, round.name1, function () {
+                        revealCard(2, round.name2, function () {
+                            revealCard(3, round.name3, function () {
+                                $('#submitButton').show();
+                            });
+                        });
+                    });
+                }, 500);
+
+            }
+
+            function revealCard(num, name, callback) {
+                let card = $('#card' + num);
+                resolver.resolve(document.getElementById('imgname' + num), name, function () {
+                    card.toggleClass('flip');
+                    if (typeof callback === "function") {
+                        callback()
+                    }
+                }, 6, 10);
+            }
+
+            //console.log(document.getElementById('image1').src);
+
+            if (round.name1 == 'Adele' || round.name2 == 'Adele' || round.name3 == 'Adele') {
+                playSound('cunt.mp3', 1.0);
+            }
+
+
+            $('#startButton').hide();
+
+            if (keyModeEnabled) {
+                keyPicNum = 1;
+                updateHighlightedPic();
+            }
+
+            usernameUpdated(users, true);
+        });
+
+        function appendApostrophe(name) {
+            if (!name.toLowerCase().endsWith('s')) {
+                return name + "'s";
+            } else {
+                return name + "'";
+            }
+        }
+
+        socket.on('usernameUpdated', function (names, roundStarted) {
+            usernameUpdated(names, roundStarted);
+        });
+
+        socket.on('isValidUsername', function (valid, msg) {
+            if (valid) {
+                $('#inputUsername').removeClass('is-invalid');
+            } else {
+                document.getElementById('invalidNameFeedback').innerHTML = msg;
+                $('#inputUsername').addClass("is-invalid");
+            }
+        });
+
+
+        socket.on('alert', function (msg) {
+            modalAlert(msg);
+        });
+
+        socket.on('roundHasStarted', function () {
+            continueSubmitting();
+        });
+
+        socket.on('endRound', function (users) {
+            $('#sweepPackText').hide();
+            resetKeyboardStuff();
+            updateStatusText("Round ended");
+            $('#submitButton').hide();
+        });
+
+        socket.on('updateStatusText', function (string) {
+            updateStatusText(string);
+        });
+
+        socket.on('showChoices', function (data, names) {
+            showChoices(data, names);
+        });
+
+        socket.on('clearChoices', function () {
+            clearChoices();
+
+            if (!pageOpen) {
+                // playSound("roundstart.mp3", '0.1');
+            }
+        });
+
+        socket.on('toggleStartButton', function (data) {
+
+
+            if (data == 0) {
+                document.getElementById("status").innerHTML = "Waiting to begin...";
+                $('#startButton').show();
+            } else if (data == 1) {
+                document.getElementById("status").innerHTML = "Round in progress";
+                $('#startButton').hide();
+            }
+
+        });
+
+        socket.on('packRoundProgress', function (progress, packs) {
+            let packBar = $('#packBar');
+            let percentString = progress + "%";
+            packBar.attr('aria-valuenow', progress);
+            packBar.attr('style', 'width: ' + percentString);
+            packBar.html(percentString);
+            $('#numPacks').html(packs);
+            $('#packProgressDiv').show();
+        });
+
+        socket.on('updatePackCounter', function(numPacks)
+        {
+           $('#numPacks').html(numPacks);
+        });
+
+        socket.on('sweepPack', function (name) {
+            console.log('sweepPack: ' + name)
+            let sweepEle = $('#sweepPackText');
+            sweepEle.find("i").html(name);
+            sweepEle.show();
+        });
+
+        socket.on('playAudio', function (name, volume) {
+            playSound(name, volume);
+        });
+
+        function playSound(name, volume, resumeSpotify = false) {
+            let audio = new Audio('static/sound/' + name);
+            audio .volume = volume;
+
+            if(resumeSpotify)
+            {
+                audio.onended = function () {toggle_spotify(true)}
+            }
+
+            audio.play();
+        }
+
+        function modalAlert(msg) {
+            document.getElementById('modalTitle').innerHTML = msg;
+            $('.modal').show();
+        }
+
+        function hideModal() {
+            $('.modal').hide();
+        }
+
+    </script>
+
+</head>
+
+<style>
+    @import url(https://fonts.googleapis.com/css?family=Open+Sans);
+    @import url('https://fonts.googleapis.com/css?family=Bungee');
+
+    @font-face {
+        font-family: 'Unica One';
+        font-style: normal;
+        font-weight: 400;
+        src: local('Unica One'), local('UnicaOne-Regular'), url(https://themes.googleusercontent.com/static/fonts/unicaone/v1/z3VYemEbD7zsQFQLG6g3SqCWcynf_cDxXwCLxiixG1c.ttf) format('truetype');
+    }
+
+    fieldset {
+        border: none;
+        padding: 0;
+        margin: 0;
+        text-align: center;
+    }
+
+    button + span {
+        position: relative;
+        top: -2.5rem;
+        left: 7rem;
+    }
+
+    .radio-inline__input_first {
+        clip: rect(1px, 1px, 1px, 1px);
+        position: absolute !important;
+    }
+
+    .radio-inline__input_second {
+        clip: rect(1px, 1px, 1px, 1px);
+        position: absolute !important;
+    }
+
+    .radio-inline__input_third {
+        clip: rect(1px, 1px, 1px, 1px);
+        position: absolute !important;
+    }
+
+    .radio-inline__label {
+        display: inline-block;
+        font-size: 1rem;
+        font-family: 'Open Sans';
+        padding: 0.5rem 1rem;
+        margin-right: 18px;
+        border-radius: 3px;
+        transition: all .2s;
+    }
+
+    .radio-inline__input_first:checked + .radio-inline__label {
+        background: rgb(0, 107, 247);
+        color: #fff;
+        text-shadow: 0 0 1px rgba(0, 0, 0, .7);
+    }
+
+    .radio-inline__input_second:checked + .radio-inline__label {
+        background: rgb(29, 175, 114);
+        color: #fff;
+        text-shadow: 0 0 1px rgba(0, 0, 0, .7);
+    }
+
+    .radio-inline__input_third:checked + .radio-inline__label {
+        background: #B54A4A;
+        color: #fff;
+        text-shadow: 0 0 1px rgba(0, 0, 0, .7);
+    }
+
+    .radio-inline__input_first:focus + .radio-inline__label {
+        outline-color: #4D90FE;
+        outline-offset: -2px;
+        outline-style: auto;
+        outline-width: 1px;
+    }
+
+    .radio-inline__input_second:focus + .radio-inline__label {
+        outline-color: #4D90FE;
+        outline-offset: -2px;
+        outline-style: auto;
+        outline-width: 1px;
+    }
+
+    .radio-inline__input_third:focus + .radio-inline__label {
+        outline-color: #4D90FE;
+        outline-offset: -2px;
+        outline-style: auto;
+        outline-width: 1px;
+    }
+
+    .btn-huge {
+        padding-top: 20px;
+        padding-bottom: 20px;
+        padding-right: 70px;
+        padding-left: 70px;
+    }
+
+    .list-group-item {
+        word-wrap: break-word;
+    }
+
+    .fixOverlayDiv {
+        position: relative;
+        width: 100%;
+        padding: 0px;
+    }
+
+    .imageChoices {
+        font-size: 18pt;
+        color: white;
+        text-shadow: -1px -1px 0 #000,
+        1px -1px 0 #000,
+        -1px 1px 0 #000,
+        1px 1px 0 #000;
+        word-wrap: break-word;
+        text-align: left;
+        top: 0;
+        left: 1vh;
+        position: absolute;
+        width: 100%;
+    }
+
+    #switch {
+        top: 120%;
+        left: 37%;
+        width: 75px;
+        height: 40px;
+    }
+
+    .toggle {
+        position: absolute;
+        border: 2px solid #444249;
+        border-radius: 20px;
+        -webkit-transition: border-color .6s ease-out;
+        transition: border-color .6s ease-out;
+        box-sizing: border-box;
+    }
+
+    .toggle.toggle-on {
+        border-color: rgba(137, 194, 217, .4);
+        -webkit-transition: all .5s .15s ease-out;
+        transition: all .5s .15s ease-out;
+    }
+
+    .toggle-button {
+        position: absolute;
+        top: 4px;
+        width: 28px;
+        bottom: 4px;
+        right: 39px;
+        background-color: #444249;
+        border-radius: 19px;
+        cursor: pointer;
+        -webkit-transition: all .3s .1s, width .1s, top .1s, bottom .1s;
+        transition: all .3s .1s, width .1s, top .1s, bottom .1s;
+    }
+
+    .toggle-on .toggle-button {
+        top: 3px;
+        width: 65px;
+        bottom: 3px;
+        right: 3px;
+        border-radius: 23px;
+        background-color: #219ef2;
+        box-shadow: 0 0 16px #4b7a8d;
+        -webkit-transition: all .2s .1s, right .1s;
+        transition: all .2s .1s, right .1s;
+    }
+
+    .toggle-text-on {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        line-height: 36px;
+        text-align: center;
+        font-family: 'Quicksand', sans-serif;
+        font-size: 18px;
+        font-weight: normal;
+        cursor: pointer;
+        -webkit-user-select: none; /* Chrome/Safari */
+        -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* IE10+ */
+
+        color: rgba(0, 0, 0, 0);
+    }
+
+    .toggle-on .toggle-text-on {
+        color: #3b6a7d;
+        -webkit-transition: color .3s .15s;
+        transition: color .3s .15s;
+    }
+
+    .toggle-text-off {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        right: 6px;
+        line-height: 36px;
+        text-align: center;
+        font-family: 'Quicksand', sans-serif;
+        font-size: 14px;
+        font-weight: bold;
+        -webkit-user-select: none; /* Chrome/Safari */
+        -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* IE10+ */
+
+        cursor: pointer;
+
+        color: #444249;
+    }
+
+    .toggle-on .toggle-text-off {
+        color: rgba(0, 0, 0, 0);
+    }
+
+    /* used for streak effect */
+    .glow-comp {
+        position: absolute;
+        opacity: 0;
+        top: 10px;
+        bottom: 10px;
+        left: 10px;
+        right: 10px;
+        border-radius: 6px;
+        background-color: rgba(75, 122, 141, .1);
+        box-shadow: 0 0 12px rgba(75, 122, 141, .2);
+        -webkit-transition: opacity 4.5s 1s;
+        transition: opacity 4.5s 1s;
+    }
+
+    .toggle-on .glow-comp {
+        opacity: 1;
+        -webkit-transition: opacity 1s;
+        transition: opacity 1s;
+    }
+
+    /**
+--------------------------------------------
+Card Flip
+--------------------------------------------
+Setup a mixin for your flip so you can include it into any element that has this or similar structure
+
+ <figure class="card"> <-- can be any class you need.
+  <div class="face front"></div> <- required classes
+  <div class="face back"> </div>  <- required classes
+ </figure>
+
+Supports arguments for Speed and Direction.
+The direction you can specify using "x" "y" or "z"
+
+Use it by putting "@include flip();" in the parent element you want to flip.
+You can style the card however you want. Here are some examples.
+
+*/
+
+    .card {
+        text-align: left;
+        position: relative;
+        -webkit-transform-style: preserve-3d;
+        transform-style: preserve-3d;
+        transition: -webkit-transform 0.5s;
+        transition: transform 0.5s;
+        transition: transform 0.5s, -webkit-transform 0.5s;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        cursor: pointer;
+        font-family: Arial, Sans-Serif;
+        width: 360px;
+        height: 479px;
+        color: white;
+        display: inline-block;
+        margin-bottom: 20px;
+    }
+
+    .card.flip {
+        -webkit-transform: rotateY(180deg);
+        transform: rotateY(180deg);
+        transition: -webkit-transform 0.5s;
+        transition: transform 0.5s;
+        transition: transform 0.5s, -webkit-transform 0.5s;
+    }
+
+    .card .face {
+        position: absolute;
+        top: 0px;
+        left: 0px;
+        bottom: 0px;
+        right: 0px;
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        -webkit-transform: translateZ(0.1px);
+        transform: translateZ(0.1px);
+    }
+
+    .card .back {
+        -webkit-transform: rotateY(180deg);
+        transform: rotateY(180deg);
+    }
+
+    .card .face {
+        border-radius: 5px;
+    }
+
+    .card .front {
+        color: #ffffff;
+        background-color: rgba(0, 0, 0, 0);
+    }
+
+    .card .front .logo {
+        width: 100px;
+        padding: 10px;
+    }
+
+    .card .back {
+        font-size: 18px;
+        line-height: 1.4em;
+    {#background: url(https://i.imgur.com/TC1UgEj.jpg);#} background-size: cover;
+        color: #FFE81F;
+        border-radius: 10px;
+    }
+
+    .card .back img {
+        width: 100%;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+        border-bottom: 3px double #FFE81F;
+    }
+
+    .card .back .description {
+        padding: 30px;
+    }
+
+    .card .back .logo {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        width: 100px;
+        padding: 10px;
+        border: none;
+    }
+
+    .card .back h1 {
+        font-size: 200px;
+        position: absolute;
+        bottom: 125px;
+        right: 125px;
+    }
+
+    .card h2 {
+        text-transform: uppercase;
+        font-size: 58px;
+        position: absolute;
+        bottom: 70px;
+        margin: 0;
+        line-height: 0.7em;
+        padding: 10px;
+    }
+
+    .card h2 small {
+        font-size: 42px;
+    }
+
+    .card cite {
+        position: absolute;
+        left: 0px;
+        bottom: 0px;
+        font-size: 10px;
+        text-transform: uppercase;
+        padding: 20px;
+    }
+
+    .card cite a {
+        color: white;
+    }
+
+    .card cite a:visited {
+        text-decoration: none;
+        color: #aaaaaa;
+    }
+
+    .personImage h2 {
+        font-size: 108px;
+        line-height: 0.55em;
+        bottom: 80px;
+    }
+
+    .personImage .front {
+        background-size: cover;
+        background-position: 50% 50%;
+        transition: background 0.3s;
+    }
+
+    .personImage .front:hover {
+        background-size: 110%;
+        background-position: 50% 20%;
+        transition: background 0.3s;
+    }
+
+    /*h1, h2, h3, h4, h5, p, li, label, button, input {*/
+    /*font-family: 'Unica One', sans-serif;*/
+    /*text-transform: uppercase;*/
+    /*}*/
+</style>
+
+<body>
+
+<div id="player"></div>
+
+<div class="modal">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 id="modalTitle" class="modal-title">Modal title</h5>
+                <button onclick="hideModal()" type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-footer">
+                <button onclick="hideModal()" type="button" class="btn btn-secondary" data-dismiss="modal">Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid">
+    <!-- User list and title row -->
+    <div class="row">
+        <div class="col-2 tex-center" align="center" style="margin-top: 1vh;">
+
+            <div class="userListTitle">
+                <h5>Connected:</h5>
+            </div>
+
+            <div class="userList" style="width:75%">
+                <ul id="list" class="list-group">
+
+                </ul>
+            </div>
+
+            <br/>
+            <br/>
+
+            <h3 id="status" style="word-wrap:break-word">Waiting to begin...</h3>
+
+            <div id="packProgressDiv" style="margin-top: 8vh; display: none">
+                <h4>Pack Progress</h4>
+                <div class="progress">
+                    <div id="packBar" class="progress-bar" role="progressbar" style="width: 25%" aria-valuenow="0"
+                         aria-valuemin="0" aria-valuemax="100">0%</div>
+                </div>
+                <br/>
+                <h6>Packs: <span id="numPacks">0</span></h6>
+            </div>
+
+            <h3 id="sweepPackText" style="margin-top: 40vh; background-color: #5c0d80; border-radius: 5px; display: none"><i></i></span> got the sweep pack!</h3>
+
+        </div>
+
+        <div class="col-8" style="margin-top: 3vh;">
+
+            <div class="row">
+                <div align="center" class="col-12">
+                    <h1 id="titleText" data-target-resolver="WTB">WTB</h1>
+                    <br/>
+                </div>
+            </div>
+
+            <div class="row">
+                <div align="center" class="col-lg-4 col-md-4 col-sm-12 col-xs-12" style="width: 100%">
+                    <h4 id="imgname1">Chelsea Kane</h4>
+
+                    <div class="fixOverlayDiv">
+                        <div class="card personImage" id="card1">
+                            <div class="face front" id="image1">
+                            </div>
+                            <div class="face back">
+                                <h1>?</h1>
+                            </div>
+                        </div>
+                        <div class="imageChoices">
+                            <ul id="image1List"></ul>
+                        </div>
+                    </div>
+
+
+                    <fieldset>
+                        <input id="first-1" class="radio-inline__input_first" type="radio" name="accessible-radio"
+                               value="item-1" checked="checked"
+                        />
+                        <label class="radio-inline__label" for="first-1">
+                            First
+                        </label>
+                        <input id="second-1" class="radio-inline__input_second" type="radio" name="accessible-radio"
+                               value="item-2"/>
+                        <label class="radio-inline__label" for="second-1">
+                            Second
+                        </label>
+                        <input id="third-1" class="radio-inline__input_third" type="radio" name="accessible-radio"
+                               value="item-3"/>
+                        <label class="radio-inline__label" for="third-1">
+                            Third
+                        </label>
+                    </fieldset>
+
+                </div>
+
+                <div align="center" class="col-lg-4 col-md-4 col-sm-12 col-xs-12" style="width: 100%">
+                    <h4 id="imgname2">Shay Mitchell</h4>
+
+                    <div class="fixOverlayDiv">
+                        <div class="card personImage" id="card2">
+                            <div class="face front" id="image2">
+                            </div>
+                            <div class="face back">
+                                <h1>?</h1>
+                            </div>
+                        </div>
+                        <div class="imageChoices">
+                            <ul id="image2List"></ul>
+                        </div>
+                    </div>
+
+
+                    <fieldset>
+                        <input id="first-2" class="radio-inline__input_first" type="radio" name="accessible-radio2"
+                               value="item-1"/>
+                        <label class="radio-inline__label" for="first-2">
+                            First
+                        </label>
+                        <input id="second-2" class="radio-inline__input_second" type="radio" name="accessible-radio2"
+                               value="item-2" checked="checked"
+                        />
+                        <label class="radio-inline__label" for="second-2">
+                            Second
+                        </label>
+                        <input id="third-2" class="radio-inline__input_third" type="radio" name="accessible-radio2"
+                               value="item-3"/>
+                        <label class="radio-inline__label" for="third-2">
+                            Third
+                        </label>
+                    </fieldset>
+
+                </div>
+
+                <div align="center" class="col-lg-4 col-md-4 col-sm-12 col-xs-12" style="width: 100%">
+                    <h4 id="imgname3">Vanessa Marano</h4>
+
+                    <div class="fixOverlayDiv">
+                        <div class="card personImage" id="card3">
+                            <div class="face front" id="image3">
+                            </div>
+                            <div class="face back">
+                                <h1>?</h1>
+                            </div>
+                        </div>
+                        <div class="imageChoices">
+                            <ul id="image3List"></ul>
+                        </div>
+                    </div>
+
+                    <fieldset>
+                        <input id="first-3" class="radio-inline__input_first" type="radio" name="accessible-radio3"
+                               value="item-1"/>
+                        <label class="radio-inline__label" for="first-3">
+                            First
+                        </label>
+                        <input id="second-3" class="radio-inline__input_second" type="radio" name="accessible-radio3"
+                               value="item-2"/>
+                        <label class="radio-inline__label" for="second-3">
+                            Second
+                        </label>
+                        <input id="third-3" class="radio-inline__input_third" type="radio" name="accessible-radio3"
+                               value="item-3" checked="checked"
+                        />
+                        <label class="radio-inline__label" for="third-3">
+                            Third
+                        </label>
+                    </fieldset>
+
+                </div>
+            </div>
+
+            <div class="row">
+                <div align="center" class="col-12" style="margin-top:10vh">
+                    <button id="submitButton" onclick="submitAnswer()" type="button"
+                            class="btn btn-outline-success btn-lg btn-huge">Submit
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="col-2 text-center" align="center" style="margin-top:5vh;">
+            <div class="row">
+                <div class="col-12" align="center">
+                    <img width="30px" height="30px"
+                         src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Spotify_logo_without_text.svg/168px-Spotify_logo_without_text.svg.png"/>
+                    {% if spotify_auth %}
+                        <p style="color: limegreen">Linked</p>
+                    {% else %}
+                        <p><a style="color: red" href="./linkspotify">Not linked - link here</a></p>
+                    {% endif %}
+                    <button type="button" id="statsButton" onclick="showStats()"
+                            class="btn btn-primary btn-lg btn-block">Stats
+                    </button>
+                    <button type="button" id="notesButton" onclick="showPatchNotes()"
+                            class="btn btn-primary btn-lg btn-block">Patch Notes
+                    </button>
+                    <button type="button" id="profileButton" onclick="showMySettings()"
+                            class="btn btn-primary btn-lg btn-block">My Settings
+                    </button>
+
+                    <!--                    <button type="button" id="profileButton" onclick="showCelebInfo()"
+                                                class="btn btn-success btn-lg btn-block">Earn Card Packs
+                                        </button> -->
+
+                    <button type="button" id="tradingButton" onclick="showTradingHome()"
+                            class="btn btn-primary btn-lg btn-block">Trading Cards
+                    </button>
+
+                    <p style="margin-top: 3vh">New Round Alert</p>
+
+                    <div class='toggle' id='switch' style="margin-top: -8ch">
+                        <div class='toggle-text-off'>OFF</div>
+                        <div class='glow-comp'></div>
+                        <div class='toggle-button'></div>
+                        <div class='toggle-text-on'>ON</div>
+                    </div>
+
+
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12" align="center" style="margin-top:40vh">
+                    <div class="form-group">
+                        <label class="col-form-label" for="inputDefault">Username</label>
+                        <input type="text" class="form-control" placeholder="Enter new username" id="inputUsername"
+                               maxlength="20">
+                        <div id="invalidNameFeedback" class="invalid-feedback"></div>
+                        <br/>
+                        <button type="button" onclick="changeUsername()" class="btn btn-outline-info btn-block">Set
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+</div>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+</body>
+
+</html>

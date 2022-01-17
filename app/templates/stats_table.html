@@ -1,0 +1,244 @@
+<html>
+
+<head>
+    <title>SMA Stats Beta</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootswatch/4.0.0/slate/bootstrap.min.css"
+          crossorigin="anonymous">
+    <!-- <link rel="stylesheet" href="/client/assets/css/main.css"> -->
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"
+            integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+            crossorigin="anonymous"></script>
+    <link rel="stylesheet" type="text/css"
+          href="https://cdn.datatables.net/v/bs4/dt-1.10.16/sl-1.2.5/datatables.min.css"/>
+    <script type="text/javascript"
+            src="https://cdn.datatables.net/v/bs4/dt-1.10.16/sl-1.2.5/datatables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/plug-ins/1.10.16/sorting/natural.js"></script>
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.1.1/socket.io.js"></script>
+        <link rel="apple-touch-icon" sizes="180x180" href="../static/images/favicons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../static/images/favicons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../static/images/favicons/favicon-16x16.png">
+    <link rel="manifest" href="../static/images/favicons/site.webmanifest">
+    <link rel="mask-icon" href="../static/images/favicons/safari-pinned-tab.svg" color="#5bbad5">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="theme-color" content="#ffffff">
+
+    <style>
+        /* Change row selection colors for both even and odd rows */
+
+        tr.even.selected {
+            background-color: rgb(77, 77, 77) !important;
+            /* Add !important to make sure override datables base styles */
+        }
+
+        tr.odd.selected {
+            background-color: rgb(77, 77, 77) !important;
+            /* Add !important to make sure override datables base styles */
+        }
+
+        .jumbotron.mine {
+            height: 100px;
+        }
+
+        .my-vertical-center {
+            position: relative;
+            top: 50%;
+            transform: translateY(20%);
+        }
+    </style>
+</head>
+
+
+<!-- Image and text -->
+<!-- <nav class="navbar-nav">
+    <a class="navbar-brand" href="#">
+        <img src="/client/images/favicon.svg" width="30" height="30" class="d-inline-block align-top" alt=""> SMA
+    </a>
+
+</nav> -->
+
+<nav class="navbar navbar-expand-lg">
+    <a class="navbar-brand" href="#">
+        <img src="{{url_for('static', filename='images/favicon.svg')}}" width="30" height="30" class="d-inline-block align-top" alt=""> SMA Stats
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup"
+            aria-controls="navbarNavAltMarkup"
+            aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+        <div class="navbar-nav">
+            <a class="nav-item nav-link active" href="#">Celeb Stats</a>
+            <a class="nav-item nav-link" href="/playerstats">Player Stats</a>
+            <a class="nav-item nav-link" href="/mystats">My Stats</a>
+        </div>
+    </div>
+</nav>
+
+<div class="jumbotron mine">
+    <h1 align="center">😤Celebrity Stats😤</h1>
+</div>
+
+<body>
+
+<div id="infoProgressBar" class="progress" style="height: 5%">
+    <div class="progress-bar progress-bar-striped bg-success progress-bar-animated" role="progressbar"
+         aria-valuenow="100" aria-valuemin="0"
+         aria-valuemax="100" style="width: 100%">
+        <small class="justify-content-center d-flex position-absolute w-100" style="font-size: 20px">
+            <i>Fetching from database...</i>
+        </small>
+    </div>
+</div>
+
+
+<div style="visibility:hidden" id="tableDiv" class="container-fluid rounded row" align="center">
+
+    <div class="col-2 my-vertical-center">
+        <img id="imgPerson" style="width:100%;" src="" class="rounded" alt="Image">
+    </div>
+
+    <div class="col-10">
+        <table id="statsTable" class="table table-hover">
+            <thead>
+            <tr class="clickable-row">
+                <th scope="col">Name</th>
+                <th scope="col">Appearances</th>
+                <th scope="col">Firsts</th>
+                <th scope="col">Seconds</th>
+                <th scope="col">Thirds</th>
+            </tr>
+            </thead>
+            <tbody>
+
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+</br>
+</body>
+
+<script>
+    var socket = io("/stats-space");
+    var people;
+    var baseDir = ""
+    var rowCounter = 0;
+    var statsTable;
+
+    socket.emit('getPeopleTableStats');
+
+
+    function round(value, decimals) {
+        return Number(Math.round(value + 'e' + decimals) + 'e-' + decimals);
+    }
+
+    function getPercentageString(count, total) {
+        if (total != 0)
+            return String(round((count / total * 100), 0)) + '%';
+        else
+            return "0%";
+    }
+
+    function updateView(name) {
+        document.getElementById('imgPerson').src = "{{url_for('static', filename='images/female/')}}" + name + ".png";
+    }
+
+    socket.on('peopleTableStats', function (peopleString, totalRounds) {
+        console.log(Object.keys(peopleString));
+        const people = peopleString;
+
+        // for (var key, stats of people) {
+        //     addPersonToTable(key, totalRounds, stats.apps, stats.firsts, stats.seconds, stats.thirds);
+        // }
+        for (const name in peopleString) {
+            addPersonToTable(name, totalRounds, peopleString[name].apps, peopleString[name].firsts, peopleString[name].seconds, peopleString[name].thirds)
+        }
+
+        // Hide progress bar and show stats table
+        document.getElementById('infoProgressBar').style.visibility = "hidden";
+        document.getElementById('tableDiv').style.visibility = "visible";
+
+        // Convert table to DataTable automagically
+        statsTable = $('#statsTable').DataTable({
+            // Sort second column in descending order by default
+            order: [1, "desc"],
+            columnDefs: [{
+                type: 'natural',
+                targets: [1, 2, 3, 4]
+            }],
+            select: {
+                style: "single"
+            }
+        });
+
+        // Select first row by default
+        statsTable.row(':eq(0)', {
+            page: 'current'
+        }).select();
+
+        var s = statsTable.row(':eq(0)', {
+            page: 'current'
+        });
+
+        s.select();
+
+        const firstRowName = s.data()[0];
+        updateView(firstRowName);
+
+        statsTable.on('user-select', function (e, dt, type, cell, originalEvent) {
+
+            // Stop user from deselecting a row (ensures a row is always selected)
+            if ($(cell.node()).parent().hasClass('selected')) {
+                e.preventDefault();
+            }
+
+            const personName = $(cell.node()).parent()["0"].cells["0"].innerHTML
+            updateView(personName);
+        });
+    });
+
+
+    // Add a person to the table
+    function addPersonToTable(name, totalRounds, appearances, firsts, seconds, thirds) {
+        var table = document.getElementById("statsTable").getElementsByTagName('tbody')[0];
+        var row = table.insertRow(rowCounter);
+        var cellName = row.insertCell(0);
+        var cellApps = row.insertCell(1);
+        var cellFirsts = row.insertCell(2);
+        var cellSeconds = row.insertCell(3);
+        var cellThirds = row.insertCell(4);
+
+        const totalSelections = firsts + seconds + thirds;
+
+        const appPercent = getPercentageString(appearances, totalRounds)
+        const firstPercent = getPercentageString(firsts, totalSelections);
+        const secondPercent = getPercentageString(seconds, totalSelections);
+        const thirdPercent = getPercentageString(thirds, totalSelections);
+
+        cellName.innerHTML = name
+        cellApps.innerHTML = appearances + "&emsp;(" + appPercent + ")";
+        cellFirsts.innerHTML = firstPercent + "&emsp;(" + firsts + ")";
+        cellSeconds.innerHTML = secondPercent + "&emsp;(" + seconds + ")";
+        cellThirds.innerHTML = thirdPercent + "&emsp;(" + thirds + ")";
+        rowCounter++;
+    }
+
+    socket.on('personList', function (p, dir) {
+        console.log('personList')
+        people = p;
+        baseDir = dir + "/"
+        people = people.map(function (x) {
+            return x.slice(0, -4)
+        });
+        // console.log(people);
+        document.getElementById('infoProgressBar').style.display = "none";
+    });
+</script>
+
+</html>

@@ -1,0 +1,9 @@
+    @font-face {
+        font-family: belwe;
+        src: url('../assets/fonts/Belwe-bd-bt-bold.ttf');
+    }
+
+    @font-face {
+        font-family: gwent;
+        src: url('../assets/fonts/gwent-extra-bold.ttf');
+    }

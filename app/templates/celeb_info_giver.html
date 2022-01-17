@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootswatch/4.0.0/darkly/bootstrap.min.css"
+          crossorigin="anonymous">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.1.1/socket.io.js"></script>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+            integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+            crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/countrySelect.min.css') }}">
+    <script src="{{ url_for('static', filename='js/countrySelect.min.js') }}"></script>
+    <title>SMA Celeb Info</title>
+        <link rel="apple-touch-icon" sizes="180x180" href="../static/images/favicons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../static/images/favicons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../static/images/favicons/favicon-16x16.png">
+    <link rel="manifest" href="../static/images/favicons/site.webmanifest">
+    <link rel="mask-icon" href="../static/images/favicons/safari-pinned-tab.svg" color="#5bbad5">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="theme-color" content="#ffffff">
+</head>
+
+
+<script>
+    const socket = io('/celebinfo-space');
+    var personName = null;
+    var lastpackCount = Number.MAX_SAFE_INTEGER;
+
+    $(document).ready(function () {
+        $("#country").countrySelect();
+
+        $(".card").click(function (e) {
+            console.log('meme')
+            let cardImage = e.currentTarget.querySelector('[id^=image]');
+            let link = cardImage.getAttribute('href');
+            window.open(link);
+        });
+    });
+
+    socket.on('receivedPerson', function (name, packsEarned, percentToNextPack) {
+        console.log('receivedPerson: ' + name + " \t" + packsEarned + "\t" + percentToNextPack);
+
+        if (packsEarned > lastpackCount) {
+            let filenames = ['excellent.wav', 'impressive.wav', 'perfect.wav'];
+            let rand = filenames[Math.floor(Math.random() * filenames.length)];
+
+            let soundUrl = "{{ url_for('static', filename='sound/celeb_info/') }}" + rand;
+
+            let audio = new Audio(soundUrl);
+            audio.volume = 0.1;
+            audio.play();
+
+        }
+
+        lastpackCount = packsEarned;
+
+        personName = name;
+        $('#imgname').html(name);
+        imgUrl = "url({{ url_for('static', filename='images/female/')}}" + encodeURI(name) + ".png)";
+        card = $('#image');
+        card.css("background-image", imgUrl);
+        card.attr("href", "https://www.google.com/search?q=" + name);
+        $('#pack-count').html(packsEarned);
+        let packBar = $('#pack-progress');
+        packBar.css("width", percentToNextPack + "%");
+        packBar.attr('aria-valuenow', percentToNextPack);
+        $('#submitButton').show();
+
+
+    });
+
+    function skip() {
+        socket.emit('skip', personName);
+    }
+
+    function submitAnswer() {
+        let countryData = $("#country").countrySelect("getSelectedCountryData");
+        socket.emit('savePersonInfo', personName, countryData.iso2);
+        $('#submitButton').hide();
+    }
+
+    socket.on('noMoreLeft', function (packsEarned) {
+        $('#pack-count').html(packsEarned);
+        $('#progressText').html('All images complete!');
+        $('#personDiv').hide();
+    });
+
+
+</script>
+
+<body>
+
+<div class="row" style="margin-top: 2vh">
+    <div align="center" class="col-3">
+        <h4 id="pack-text" style="margin-left: 6vh">Card packs earned: <span id="pack-count"
+                                                                             class="text-success">0</span></h4>
+
+        <br/>
+        <h5 id="progressText" style="margin-left: 5vh">Progress to next pack</h5>
+        <div class="progress" style="margin-left: 5vh">
+            <div id="pack-progress" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar"
+                 style="width: 0;" aria-valuenow="0"
+                 aria-valuemin="0"
+                 aria-valuemax="100"></div>
+        </div>
+    </div>
+    <div id="personDiv" align="center" class="col-6">
+        <h4 id="imgname">Chelsea Kane</h4>
+
+        <div class="fixOverlayDiv">
+            <div class="card personImage" id="card">
+                <div class="face front" id="image">
+                </div>
+                <div class="face back">
+                    <h1>?</h1>
+                </div>
+            </div>
+        </div>
+
+        <h3>Select country</h3>
+        <input type="text" id="country">
+
+        <button id="submitButton" onclick="submitAnswer()" style="margin-left: 2vh" type="button"
+                class="btn btn-outline-success btn-lg btn-huge">Submit
+        </button>
+
+        <button id="skipButton" onclick="skip()" style="margin-left: 2vh" type="button"
+                class="btn btn-outline-warning btn-lg btn-huge">Skip
+        </button>
+    </div>
+    <div align="center" class="col-3">
+
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+</body>
+<style>
+    .card {
+        text-align: left;
+        position: relative;
+        -webkit-transform-style: preserve-3d;
+        transform-style: preserve-3d;
+        transition: -webkit-transform 0.5s;
+        transition: transform 0.5s;
+        transition: transform 0.5s, -webkit-transform 0.5s;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        cursor: pointer;
+        font-family: Arial, Sans-Serif;
+        width: 360px;
+        height: 479px;
+        color: white;
+        display: inline-block;
+        margin-bottom: 20px;
+    }
+
+    .card.flip {
+        -webkit-transform: rotateY(180deg);
+        transform: rotateY(180deg);
+        transition: -webkit-transform 0.5s;
+        transition: transform 0.5s;
+        transition: transform 0.5s, -webkit-transform 0.5s;
+    }
+
+    .card .face {
+        position: absolute;
+        top: 0px;
+        left: 0px;
+        bottom: 0px;
+        right: 0px;
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        -webkit-transform: translateZ(0.1px);
+        transform: translateZ(0.1px);
+    }
+
+    .card .back {
+        -webkit-transform: rotateY(180deg);
+        transform: rotateY(180deg);
+    }
+
+    .card .face {
+        border-radius: 5px;
+    }
+
+    .card .front {
+        color: #ffffff;
+        background-color: rgba(0, 0, 0, 0);
+        background-image: url(/static/images/female/Chelsea%20Kane.png);
+    }
+
+    .card .front .logo {
+        width: 100px;
+        padding: 10px;
+    }
+
+    .card .back {
+        font-size: 18px;
+        line-height: 1.4em;
+    {#background: url(https://i.imgur.com/TC1UgEj.jpg);#} background-size: cover;
+        color: #FFE81F;
+        border-radius: 10px;
+    }
+
+    .card .back img {
+        width: 100%;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+        border-bottom: 3px double #FFE81F;
+    }
+
+    .card .back .description {
+        padding: 30px;
+    }
+
+    .card .back .logo {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        width: 100px;
+        padding: 10px;
+        border: none;
+    }
+
+    .card .back h1 {
+        font-size: 200px;
+        position: absolute;
+        bottom: 125px;
+        right: 125px;
+    }
+
+    .card h2 {
+        text-transform: uppercase;
+        font-size: 58px;
+        position: absolute;
+        bottom: 70px;
+        margin: 0;
+        line-height: 0.7em;
+        padding: 10px;
+    }
+
+    .card h2 small {
+        font-size: 42px;
+    }
+
+    .card cite {
+        position: absolute;
+        left: 0px;
+        bottom: 0px;
+        font-size: 10px;
+        text-transform: uppercase;
+        padding: 20px;
+    }
+
+    .card cite a {
+        color: white;
+    }
+
+    .card cite a:visited {
+        text-decoration: none;
+        color: #aaaaaa;
+    }
+
+    .personImage h2 {
+        font-size: 108px;
+        line-height: 0.55em;
+        bottom: 80px;
+    }
+
+    .personImage .front {
+        background-size: cover;
+        background-position: 50% 50%;
+        transition: background 0.3s;
+    }
+
+    .personImage .front:hover {
+        background-size: 110%;
+        background-position: 50% 20%;
+        transition: background 0.3s;
+    }
+
+    .country-select-input .flag {
+        background-image: url({{ url_for('static', filename='images/flags.png')}});
+    }
+
+    li > span {
+        color: black;
+    }
+</style>
+
+</html>
